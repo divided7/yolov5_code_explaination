@@ -159,66 +159,7 @@ def run(
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
                 # print("det:", det)
-                # --------------------------------------------------------------------
-                # 这里的det为tensor，n行6列，n行代表n个框，6列代表x，y，x，y，conf，class
-                """
-                此处添加关键点检测或其他方法获取到的投影变换4个点位置
-                def get_bar_keypoints():
-                    # 这里假设已经获取到4个点的位置
-                    return x1,y1,x2,y2,x3,y3,x4,y4
-                """
-                x1, y1, x2, y2, x3, y3, x4, y4 = 706, 361, 1170, 363, 709, 378, 1183, 379
-                """
-                此处需要添加一些逻辑模块，用于确保被检测到的是两只手，排除干扰
-                """
-                hands_site = []
-                for i in det:
-                    if i[-1] == 1:  # 为手的类
-                        hands_site.append(i[2].item())
-                print("hands_site", hands_site)
-                assert len(hands_site) < 3, "检测到手的数量大于2"  # 确保有效的手数量<=2
-                if len(hands_site) == 2:
-                    x = (hands_site[0] + hands_site[1]) / 2  # 注意这里x保留浮点数
-                    print("检测到两只手，竖线对应的x值", x)
-                else:
-                    print("当前检测到手的数量小于2")
 
-                def cross_point(x1, y1, x2, y2, x):
-                    k = (y2 - y1) / (x2 - x1)
-                    b = y1 - k * x1
-                    y = k * x + b
-                    return y
-
-                y = (cross_point(x1, y1, x2, y2, x) + cross_point(x3, y3, x4, y4, x)) / 2
-                # print("(x,y)=", (x, y))
-
-                pic = imc
-                crop_w, crop_h = 700, 50
-                pts1 = np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
-                pts2 = np.float32(
-                    [[0, 0], [0, crop_w], [crop_h, 0], [crop_h, crop_w]])  # crop_h,crop_w = 720, 1280 # pts1为原图上的四个点
-                # pst2为新图上四个点
-                MM = cv2.getPerspectiveTransform(pts1, pts2)
-                # print("透视变换矩阵:", MM)
-                p_point = np.dot(MM, np.array(([x], [y], [1])))
-                # print("p_point", p_point)
-                x_p, y_p = p_point[0][0] / p_point[2][0], p_point[1][0] / p_point[2][0]
-                # print("透视变换后的点位置为：", x_p, y_p)
-                p_r = cv2.warpPerspective(pic, MM, (crop_h, crop_w))  # 透视图
-                cv2.circle(p_r, (round(x_p) , round(y_p)), 3, (255, 0, 0), 3)  # 添加透视点
-
-                # 显示原图
-                cv2.imshow("原图", pic)
-                cv2.waitKey()
-                cv2.destroyAllWindows()
-
-                # 显示指定区域透视图
-                p_r = cv2.rotate(p_r, cv2.ROTATE_90_COUNTERCLOCKWISE) # p_r逆时针90度便于可视化
-                cv2.imshow("指定区域透视图", p_r)
-                cv2.waitKey()
-                cv2.destroyAllWindows()
-                # cv2.imwrite("透视.jpg", p_r)
-                # --------------------------------------------------------------------
                 # Print results
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
